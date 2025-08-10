@@ -1,23 +1,31 @@
+#include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-#include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "hal/adc_types.h"
 #include "nvs_flash.h"
-
-#include "lwip/err.h"
-#include "lwip/sys.h"
-
+#include "driver/adc.h"
 #include "picoros.h"
 #include "picoserdes.h"
 
+// Configuration
+#define TOPIC_NAME                  "joystick/twist"
+#define ADC1_CH_X                   ADC1_CHANNEL_3
+#define ADC1_CH_Y                   ADC1_CHANNEL_4
+#define UPDATE_PERIOD_MS            200
+#define DEAD_BAND_PERCENT           5
+#define FULL_SCALE_LINEAR           1.5f // m/s
+#define FULL_SCALE_ANGULAR          2.5f // rad/s
 #define EXAMPLE_ESP_WIFI_SSID       CONFIG_ESP_WIFI_SSID
 #define EXAMPLE_ESP_WIFI_PASS       CONFIG_ESP_WIFI_PASSWORD
 #define MODE                        "client"
 #define LOCATOR                     "tcp/192.168.1.10:7447"
 #define EXAMPLE_ESP_MAXIMUM_RETRY   CONFIG_ESP_MAXIMUM_RETRY
+
+
 
 #if CONFIG_ESP_WPA3_SAE_PWE_HUNT_AND_PECK
 #define ESP_WIFI_SAE_MODE WPA3_SAE_PWE_HUNT_AND_PECK
@@ -62,7 +70,7 @@ static EventGroupHandle_t s_wifi_event_group;
 // Example Publisher
 picoros_publisher_t pub_cmdvel = {
     .topic = {
-        .name = "cmd_vel",
+        .name = TOPIC_NAME,
         .type = ROSTYPE_NAME(ros_Twist),
         .rihs_hash = ROSTYPE_HASH(ros_Twist),
     },
@@ -70,32 +78,40 @@ picoros_publisher_t pub_cmdvel = {
 
 // Example node
 picoros_node_t node = {
-    .name = "talker",
+    .name = "joystick",
 };
 
 // Buffer for publication, used from this thread
 uint8_t pub_buf[1024];
 
-static const char *TAG = "wifi station";
+static const char *TAG = "joystick_node";
 
 static int s_retry_num = 0;
 
-static void publish_cmd_vel(void *pvParameters)
+static void publish_twist_task(void *pvParameters)
 {
     for(;;){
+        int middle_range = 0x07FF;
+        int x_raw = adc1_get_raw( ADC1_CH_X);
+        int y_raw = adc1_get_raw( ADC1_CH_Y);
+        int x_ratio = (x_raw - middle_range) * 100 / middle_range; 
+        int y_ratio = (y_raw - middle_range) * 100 / middle_range; 
+        if (abs(x_ratio) < DEAD_BAND_PERCENT){
+            x_ratio = 0;  
+        }
+        if (abs(y_ratio) < DEAD_BAND_PERCENT){
+            y_ratio = 0;  
+        }
         ros_Twist twist = {
-            .linear = {1, 0, 0},
-            .angular = {0, 0, 0.5}
+            .linear.x = x_ratio / 100.0f * FULL_SCALE_LINEAR,
+            .angular.z = y_ratio / 100.0f * FULL_SCALE_ANGULAR
         };
-        ESP_LOGI(TAG, "Publishing cmd vel...\n");
         size_t len = ps_serialize(pub_buf, &twist, 1024);
         if (len > 0){
+            ESP_LOGI(TAG, "Publishing twist linear.x:%f angular.z:%f...", twist.linear.x, twist.angular.z);
             picoros_publish(&pub_cmdvel, pub_buf, len);
         }
-        else{
-            ESP_LOGE(TAG, "Twist message serialization error.");
-        }
-        z_sleep_ms(1000);
+        z_sleep_ms(UPDATE_PERIOD_MS);
     }
 }
 
@@ -197,12 +213,12 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
-    if (CONFIG_LOG_MAXIMUM_LEVEL > CONFIG_LOG_DEFAULT_LEVEL) {
-        /* If you only want to open more logs in the wifi module, you need to make the max level greater than the default level,
-         * and call esp_log_level_set() before esp_wifi_init() to improve the log level of the wifi module. */
-        esp_log_level_set("wifi", CONFIG_LOG_MAXIMUM_LEVEL);
-    }
-
+    // Init ADC
+    adc1_config_width(ADC_WIDTH_BIT_12);
+    adc1_config_channel_atten( ADC1_CH_X, ADC_ATTEN_DB_12 );
+    adc1_config_channel_atten( ADC1_CH_Y, ADC_ATTEN_DB_12 );
+    
+    // Init WIFI
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
 
@@ -223,5 +239,5 @@ void app_main(void)
     ESP_LOGI(TAG, "Declaring publisher on %s\n", pub_cmdvel.topic.name);
     picoros_publisher_declare(&node, &pub_cmdvel);
 
-    xTaskCreate(publish_cmd_vel, "cmd_vel_publish_task", 4096, NULL, 1, NULL);
+    xTaskCreate(publish_twist_task, "cmd_vel_publish_task", 4096, NULL, 1, NULL);
 }
