@@ -1,0 +1,3 @@
+[submodule "esp32-joystick/components/picoros"]
+	path = esp32-joystick/components/picoros
+	url = git@github.com:Pico-ROS/picoros-espidf-component.git
