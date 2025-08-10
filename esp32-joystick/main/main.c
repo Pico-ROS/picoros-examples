@@ -26,7 +26,6 @@
 #define EXAMPLE_ESP_MAXIMUM_RETRY   CONFIG_ESP_MAXIMUM_RETRY
 
 
-
 #if CONFIG_ESP_WPA3_SAE_PWE_HUNT_AND_PECK
 #define ESP_WIFI_SAE_MODE WPA3_SAE_PWE_HUNT_AND_PECK
 #define EXAMPLE_H2E_IDENTIFIER ""
@@ -65,10 +64,8 @@ static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_FAIL_BIT      BIT1
 
 
-
-
 // Example Publisher
-picoros_publisher_t pub_cmdvel = {
+picoros_publisher_t pub_twist = {
     .topic = {
         .name = TOPIC_NAME,
         .type = ROSTYPE_NAME(ros_Twist),
@@ -109,7 +106,7 @@ static void publish_twist_task(void *pvParameters)
         size_t len = ps_serialize(pub_buf, &twist, 1024);
         if (len > 0){
             ESP_LOGI(TAG, "Publishing twist linear.x:%f angular.z:%f...", twist.linear.x, twist.angular.z);
-            picoros_publish(&pub_cmdvel, pub_buf, len);
+            picoros_publish(&pub_twist, pub_buf, len);
         }
         z_sleep_ms(UPDATE_PERIOD_MS);
     }
@@ -236,8 +233,8 @@ void app_main(void)
     ESP_LOGI(TAG, "Starting Pico-ROS node %s domain:%lu\n", node.name, node.domain_id);
     picoros_node_init(&node);
 
-    ESP_LOGI(TAG, "Declaring publisher on %s\n", pub_cmdvel.topic.name);
-    picoros_publisher_declare(&node, &pub_cmdvel);
+    ESP_LOGI(TAG, "Declaring publisher on %s\n", pub_twist.topic.name);
+    picoros_publisher_declare(&node, &pub_twist);
 
-    xTaskCreate(publish_twist_task, "cmd_vel_publish_task", 4096, NULL, 1, NULL);
+    xTaskCreate(publish_twist_task, "publish_twist_task", 4096, NULL, 1, NULL);
 }
