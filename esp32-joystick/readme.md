@@ -1,13 +1,9 @@
 # ESP32 picoros joystick example
 - Uses [picoros IDF component](https://github.com/Pico-ROS/picoros-espidf-component) for zenoh and ROS2 support
-- Reads 2 axis analogue joystick.
-- Publishes Twist message on ROS topic
+- Reads 2 axis analogue joystick. Example [KY-023](https://www.amazon.com/Joystick-Sensor-Module-Controller-KY-023/dp/B08681VNJ4).
+- Publishes `sensor_msgs/msg/Joy` message on ROS topic
 
 ## Building
-```
-git clone <this_repository>
-git submodule update --init recursive 
-```
 
 Use ESP-IDF vscode extension to open & compile & flash the project.
 
@@ -16,19 +12,28 @@ Use ESP-IDF vscode extension to open & compile & flash the project.
 In main.c:
 
 ```c
-#define TOPIC_NAME                  "joystick/twist"
+// Wifi Configuration
+#define WIFI_SSID                   "mySSID"
+#define WIFI_PASS                   "password"
+#define WIFI_MAXIMUM_RETRY          5
+
+// Joystick config
 #define ADC1_CH_X                   ADC1_CHANNEL_3
 #define ADC1_CH_Y                   ADC1_CHANNEL_4
-#define UPDATE_PERIOD_MS            200
 #define DEAD_BAND_PERCENT           5
-#define FULL_SCALE_LINEAR           1.5 // m/s
-#define FULL_SCALE_ANGULAR          2.5 // rad/s
-#define EXAMPLE_ESP_WIFI_SSID       CONFIG_ESP_WIFI_SSID
-#define EXAMPLE_ESP_WIFI_PASS       CONFIG_ESP_WIFI_PASSWORD
+#define UPDATE_PERIOD_MS            50
+
+// Pico-ROS config
+#define TOPIC_NAME                  "picoros/joystick"
 #define MODE                        "client"
-#define LOCATOR                     "tcp/192.168.1.10:7447"
-#define EXAMPLE_ESP_MAXIMUM_RETRY   CONFIG_ESP_MAXIMUM_RETRY
+#define ROUTER_ADDRESS              "tcp/192.168.0.246:7447"
+
 ```
+
+In zenoh-pico `config.h` set:
+- `Z_TRANSPORT_LEASE=60000`
+- `Z_TRANSPORT_LEASE_EXPIRE_FACTOR=2`
+To match rmw_zenoh default settings.
 
 ## Testing
 ```sh
