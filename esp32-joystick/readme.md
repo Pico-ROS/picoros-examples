@@ -1,3 +1,11 @@
+# Zenoh-Pico config.h Customization
+
+This project requires the following changes in `components/picoros/picoros/thirdparty/zenoh-pico/include/zenoh-pico/config.h`:
+
+- `#define Z_TRANSPORT_LEASE 60000`
+- `#define Z_TRANSPORT_LEASE_EXPIRE_FACTOR 3`
+
+Make sure these values are set as above. If you update or re-clone the submodule, reapply these changes.
 # Launching teleop_twist_joy Node
 
 To control your robot using a joystick launch the `teleop_twist_joy` node with the command:
