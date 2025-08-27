@@ -9,8 +9,8 @@
 
 
 // Wifi Configuration
-#define WIFI_SSID                   "UbiquityRobotics"
-#define WIFI_PASS                   "ubiquity1234"
+#define WIFI_SSID                   "yourWIFI SSID"
+#define WIFI_PASS                   "password"
 #define WIFI_MAXIMUM_RETRY          5
 
 // Joystick config
