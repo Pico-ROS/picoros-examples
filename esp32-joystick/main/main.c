@@ -52,7 +52,7 @@ enum{
 
 static void publish_joy_task(void *pvParameters)
 {
-    for(;;){
+    while(true){
         int middle_range = 0x07FF;
         int x_raw = adc1_get_raw( ADC1_CH_X);
         int y_raw = adc1_get_raw( ADC1_CH_Y);
@@ -71,11 +71,6 @@ static void publish_joy_task(void *pvParameters)
                     [Y_AXIS] = y_pcnt / 100.0f
                 },
                 .n_elements = NUM_AXIS
-            },
-
-            .buttons = {
-                .data = (int32_t[1]){ 1 },
-                .n_elements = 1
             },
         };
         size_t len = ps_serialize(pub_buf, &joy, PUB_BUF_SIZE);
