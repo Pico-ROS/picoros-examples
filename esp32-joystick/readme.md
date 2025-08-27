@@ -1,3 +1,12 @@
+# Launching teleop_twist_joy Node
+
+To control your robot using a joystick launch the `teleop_twist_joy` node with the command:
+
+```bash
+ros2 run teleop_twist_joy teleop_node --ros-args --remap cmd_vel:=mcb/cmd_vel -p require_enable_button:=false -p axis_linear.x:=0 -p axis_angular.yaw:=1
+```
+
+This command remaps the `cmd_vel` topic and sets the required parameters for joystick operation.
 # ESP32 picoros joystick example
 - Uses [picoros IDF component](https://github.com/Pico-ROS/picoros-espidf-component) for zenoh and ROS2 support
 - Reads 2 axis analogue joystick. Example [KY-023](https://www.amazon.com/Joystick-Sensor-Module-Controller-KY-023/dp/B08681VNJ4).
