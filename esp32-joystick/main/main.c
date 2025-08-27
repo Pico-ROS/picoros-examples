@@ -9,18 +9,18 @@
 
 
 // Wifi Configuration
-#define WIFI_SSID                   "mySSID"
+#define WIFI_SSID                   "yourWIFI SSID"
 #define WIFI_PASS                   "password"
 #define WIFI_MAXIMUM_RETRY          5
 
 // Joystick config
-#define ADC1_CH_X                   ADC1_CHANNEL_3
+#define ADC1_CH_X                   ADC1_CHANNEL_5
 #define ADC1_CH_Y                   ADC1_CHANNEL_4
-#define DEAD_BAND_PERCENT           5
+#define DEAD_BAND_PERCENT           10
 #define UPDATE_PERIOD_MS            50
 
 // Pico-ROS config
-#define TOPIC_NAME                  "picoros/joystick"
+#define TOPIC_NAME                  "joy"
 #define MODE                        "client"
 #define ROUTER_ADDRESS              "tcp/192.168.0.246:7447"
 
@@ -52,7 +52,7 @@ enum{
 
 static void publish_joy_task(void *pvParameters)
 {
-    for(;;){
+    while(true){
         int middle_range = 0x07FF;
         int x_raw = adc1_get_raw( ADC1_CH_X);
         int y_raw = adc1_get_raw( ADC1_CH_Y);

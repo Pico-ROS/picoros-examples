@@ -7,9 +7,18 @@
 
 Use ESP-IDF vscode extension to open & compile & flash the project.
 
-## Configuration
+### Zenoh-Pico config.h Customization
 
-In main.c:
+This project requires the following changes in `components/picoros/picoros/thirdparty/zenoh-pico/include/zenoh-pico/config.h`:
+
+- `#define Z_TRANSPORT_LEASE 60000`
+- `#define Z_TRANSPORT_LEASE_EXPIRE_FACTOR 3`
+
+This is to support rmw_zenoh default configuration.
+
+### Project Configuration
+
+In `main/main.c`:
 
 ```c
 // Wifi Configuration
@@ -30,10 +39,6 @@ In main.c:
 
 ```
 
-In zenoh-pico `config.h` set:
-- `Z_TRANSPORT_LEASE=60000`
-- `Z_TRANSPORT_LEASE_EXPIRE_FACTOR=2`
-To match rmw_zenoh default settings.
 
 ## Testing
 ```sh
@@ -46,3 +51,13 @@ ros2 run rmw_zenoh_cpp rmw_zenohd
 # second terminal
 docker exec -it ros2-jazzy-zenoh /bin/bash
 ```
+
+### Launching teleop_twist_joy Node
+
+To control your robot using a joystick launch the `teleop_twist_joy` node with the command:
+
+```bash
+ros2 run teleop_twist_joy teleop_node --ros-args --remap cmd_vel:=mcb/cmd_vel -p require_enable_button:=false -p axis_linear.x:=0 -p axis_angular.yaw:=1
+```
+
+This command remaps the `cmd_vel` topic and sets the required parameters for joystick operation.
