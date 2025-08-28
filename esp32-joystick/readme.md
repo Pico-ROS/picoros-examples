@@ -12,7 +12,7 @@ Use ESP-IDF vscode extension to open & compile & flash the project.
 This project requires the following changes in `components/picoros/picoros/thirdparty/zenoh-pico/include/zenoh-pico/config.h`:
 
 - `#define Z_TRANSPORT_LEASE 60000`
-- `#define Z_TRANSPORT_LEASE_EXPIRE_FACTOR 3`
+- `#define Z_TRANSPORT_LEASE_EXPIRE_FACTOR 2`
 
 This is to support rmw_zenoh default configuration.
 
