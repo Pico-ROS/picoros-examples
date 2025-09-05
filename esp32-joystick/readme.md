@@ -39,6 +39,21 @@ In `main/main.c`:
 
 ```
 
+### Using Serial port
+Connection to zenohd can be done through serial port. On **ESP32-DevKit-C1** there are two usb connectors. The one marked with **UART** is connected to `UART_NUM_0` on esp32. The one marked **USB** is connected to esp32 USB-CDC pins. 
+
+If you want to use serial connection with USB cable and on-board serial to USB converter, the only option is to use connector marked **UART**. 
+
+Unfortunately, by default, esp32 has console output on this port.
+
+To make it work you need to:
+- Set `#define USE_SERIAL 1` in main.c
+- Set `Z_FEATURE_LINK_SERIAL 1` in zenoh-pico config.h
+- Set sdkconfig [settings](docs/DevKIT-C1-Serial.png) to move console output to USB-CDC port
+- In zenoh-pico/src/system/espidf/network.c - `_z_open_serial_from_dev` change `tx_pin = 43`, `rx_pin = 44`
+
+After setting all this up you can flash and get console output through port marked **USB**. Port marked **UART** is used for communication with the zenohd router.
+
 
 ## Testing
 ```sh

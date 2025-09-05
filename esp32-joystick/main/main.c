@@ -22,8 +22,12 @@
 // Pico-ROS config
 #define TOPIC_NAME                  "joy"
 #define MODE                        "client"
-#define ROUTER_ADDRESS              "tcp/192.168.0.246:7447"
-
+#define USE_SERIAL                  0
+#if USE_SERIAL == 1
+    #define ROUTER_ADDRESS              "serial/UART_0#baudrate=115200"
+#else
+    #define ROUTER_ADDRESS              "tcp/192.168.0.246:7447"
+#endif
 
 // ROS node
 picoros_node_t node = {
@@ -102,9 +106,10 @@ void app_main(void)
     adc1_config_channel_atten( ADC1_CH_Y, ADC_ATTEN_DB_12 );
     
     // Init WIFI
-    
-    wifi_init_sta(WIFI_SSID, WIFI_PASS, WIFI_MAXIMUM_RETRY);
-    
+    #if USE_SERIAL == 0
+        wifi_init_sta(WIFI_SSID, WIFI_PASS, WIFI_MAXIMUM_RETRY);
+    #endif
+
     // Init Pico-ROS
     picoros_interface_t ifx = {
         .mode = MODE,
